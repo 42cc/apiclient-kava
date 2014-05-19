@@ -1,10 +1,12 @@
-from apiclient import KavaApi
+import apiclient
 
-api = KavaApi(username='', password='')
+api = apiclient.KavaApi(username='', password='')
 
-print api.add_project({
-    'name': "api test",
-    'company': 'Test',
-})
+
 print api.get_projects(company='42cc')
-print api.get_project('api-test')
+print api.get_project('kavyarnya')
+
+cc = api.get_company('42cc')
+# print cc.add_project({'name': 'new test'})
+print cc.projects()
+print cc.project('kavyarnya')

@@ -11,6 +11,26 @@ API_SETTINGS = {
 }
 
 
+class Company(object):
+
+    def __init__(self, company_slug, kava_api):
+        self.company_slug = company_slug
+        self.api = kava_api
+
+    def projects(self):
+        return self.api.get_projects(company=self.company_slug)
+
+    def project(self, slug):
+        return self.api.get_project(slug, company=self.company_slug)
+
+    def add_project(self, data):
+        """
+        Doesn't work because ProjectAddResource needs company name instead slug.
+        """
+        data.update({'company': self.company_slug})
+        return self.api._make_request('project/add/', data)
+
+
 class KavaApi(object):
 
     class ApiError(Exception):
@@ -23,15 +43,20 @@ class KavaApi(object):
         self.settings = dict(API_SETTINGS)
         self.settings.update(kwargs)
 
+    def get_company(self, slug):
+        return Company(company_slug=slug, kava_api=self)
+
     def get_projects(self, **kwargs):
         filters = kwargs
         return self._make_request('project/', filters, force_get=True)['projects']
 
-    def get_project(self, project_slug):
-        return self._make_request('project/%s' % project_slug)
+    def get_project(self, project_slug, company=None):
+        filters = {}
+        if company:
+            filters['company'] = company
 
-    def add_project(self, data):
-        return self._make_request('project/add/', data)
+        return self._make_request('project/%s/' % project_slug, filters,
+                                  force_get=True)
 
     def _make_request(self, resource_uri, post_data=None, force_get=False):
         """
