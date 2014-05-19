@@ -20,7 +20,7 @@ class KavaApi(object):
         pass
 
     def __init__(self, *args, **kwargs):
-        self.settings = API_SETTINGS
+        self.settings = dict(API_SETTINGS)
         self.settings.update(kwargs)
 
     def get_projects(self, **kwargs):
