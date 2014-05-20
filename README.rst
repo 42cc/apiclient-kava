@@ -9,7 +9,7 @@ Usage
 
 .. code-block:: python
 
-    import kavahq
+	import kavahq
 	import keyring
 	import getpass
 
