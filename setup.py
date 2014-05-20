@@ -12,7 +12,7 @@ def get_version(fname='kavahq/__init__.py'):
                 return eval(line.split('=')[-1])
 
 setup(
-    name='apiclient-kava',
+    name='kavahq-api',
     version=get_version(),
     packages=find_packages(),
     requires=['python (>= 2.7)', ],
