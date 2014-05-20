@@ -1,6 +1,6 @@
 import apiclient
 
-api = apiclient.KavaApi(username='', password='')
+api = apiclient.KavaApi(username='', password='', kava_url='http://127.0.0.1:8000/api/')
 
 
 print api.get_projects(company='42cc')

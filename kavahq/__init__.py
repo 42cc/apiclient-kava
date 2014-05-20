@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+__version__= '0.0.1'
 import urllib
 import urllib2
 import base64
@@ -5,7 +7,7 @@ import json
 
 
 API_SETTINGS = {
-    'kava_url': 'http://127.0.0.1:8000/api/',
+    'kava_url': 'https://kavahq.com/api/',
     'username': '',
     'password': '',
 }
