@@ -10,8 +10,17 @@ Usage
 .. code-block:: python
 
     import kavahq
+	import keyring
+	import getpass
 
-	api = kavahq.KavaApi(username='', password='', kava_url='http://127.0.0.1:8000/api/')
+	SERVICE = 'kavahq-api'
+	username = 'imposeren'
+    password = keyring.get_password(SERVICE, username)
+    if password is None:
+        password = getpass.getpass()
+        keyring.set_password(SERVICE, username, password)
+
+	api = kavahq.KavaApi(username=username, password=password)
 
 	print api.get_projects(company='42cc')
 	print api.get_project('kavyarnya')

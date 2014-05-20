@@ -92,6 +92,7 @@ class KavaApi(object):
         request.add_header("Authorization", "Basic %s" % base64string)
 
         try:
+            print request_url
             response = urllib2.urlopen(request)
         except urllib2.HTTPError as e:
             if e.code == 401:
