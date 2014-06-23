@@ -12,34 +12,57 @@ class GeneralWorkflowTest(unittest2.TestCase):
     @mock.patch('kavahq.api.requests')
     def test_projects(self, requests):
         from kavahq.api import KavaApi
+        company_name = '42 coffee cups'
         api = KavaApi(
-            username='user', password='password', company_name='42 coffee cups',
+            username='user', password='password', company_name=company_name,
         )
+        auth = ('user', 'password')
         project_slug = '42-jobs'
-        project_api = api.projects.get(project_slug=project_slug)
+        project_api = api.projects.get(project_slug)
+
+        project_api.response
         requests.get.assert_called_with(
-            urlparse.urljoin(api.base_url, 'project/'),
-            {'project_slug': project_slug}
+            urlparse.urljoin(api.base_url, 'project/%s/' % project_slug),
+            params={'project_slug': project_slug},
+            auth=auth,
         )
-        project_api.estimate
+
+        project_api.estimate.response
         requests.get.assert_called_with(
             urlparse.urljoin(api.base_url, 'project/estimate/'),
-            {'project_slug': project_slug}
+            params={
+                'project_slug': project_slug,
+                'company': company_name,
+            }
         )
-        project_api.properties
-        requests.get.assert_called_with(
+
+        project_api.properties.response
+        requests.post.assert_called_with(
             urlparse.urljoin(api.base_url, 'project/properties/'),
-            {'project_slug': project_slug}
+            data={
+                'project_slug': project_slug,
+                'company': company_name,
+            },
+            auth=auth,
         )
-        project_api.tickets
-        requests.get.assert_called_with(
+
+        project_api.tickets.response
+        requests.post.assert_called_with(
             urlparse.urljoin(api.base_url, 'project/tickets/'),
-            {'project_slug': project_slug}
+            data={
+                'project_slug': project_slug,
+                'company': company_name,
+            },
+            auth=auth,
         )
 
         all_projects_api = api.projects.get()
+        all_projects_api.response
         requests.get.assert_called_with(
             urlparse.urljoin(api.base_url, 'project/'),
+            params={},
+            auth=auth,
         )
-        project_api_same = all_projects_api.get(project_slug=project_slug)
+
+        project_api_same = all_projects_api.get(project_slug)
         self.assertEqual(project_api, project_api_same)

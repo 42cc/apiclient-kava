@@ -1,70 +1,92 @@
 # -*- coding: utf-8 -*-
-import requests
+import os
 import urlparse
+
+# thirdparty:
+import requests
 
 
 class ApiObject(object):
-    def __init__(self, path, api, post_or_filters=None):
-        self._path = path
-        self._api = api
-        self._filters = {}
-        self._data = None
-        self._method = api.ALLOWED_PATHS[path]['method']
-        self._post_or_filters = post_or_filters or {}
-
-        if self._method == 'post':
-            self.data
+    def __init__(self, path, api, data=None):
+        self.internaluse_path = path
+        self.internaluse_api = api
+        self.internaluse_data = data or {}
+        self._response = None
         return
 
     def __getattr__(self, name):
-        subpath = os.path.join(self._path, name)
-        if subpath in self._api.ALLOWED_PATHS:
-            return ApiObject(subpath, self._api)
+        if not name.endswith('/'):
+            name = name + '/'
+        is_project_details = (
+            self.internaluse_path not in self.internaluse_api.ALLOWED_PATHS and
+            self.internaluse_path.startswith('project/')
+        )
+        if is_project_details:
+            subpath = os.path.join('project/', name)
         else:
-            raise AttributeError
+            subpath = os.path.join(self.internaluse_path, name)
+        return ApiObject(subpath, self.internaluse_api, self.internaluse_data)
 
-    @property
-    def data(self):
-        if self._data is None:
-            if self._method == 'get':
-                self._data = self.api.get()
-            elif self._method == 'post':
-                self._data = self.api.post()
-        return self._data
-
-    def post(self, **post_data):
-        full_post_data = dict(self._post_or_filters)
-        full_post_data.update(post_data)
-        self.api._make_request(self._path, full_post_data)
-
-    def get(self, **filters):
-        full_filters = dict(self._post_or_filters)
-        full_filters.update(filters)
-        return self.api._make_request(self._path, full_filters, force_get=True)
+    def __getitem__(self, key):
+        return self.response[key]
 
     def __unicode__(self):
-        return u"<ApiObject '{self.path}': {self.data} >".format(self=self)
+        return u"<ApiObject '{self.internaluse_path}'?{self.internaluse_data} >".format(self=self)
 
-    def _data_hash(self):
-        keys = tuple(sorted(self._data.keys()))
-        values = tuple([self._data[key] for key in keys])
-        return tuple(keys, values).__hash__()
+    def __repr__(self):
+        return str(self.__unicode__())
 
     def __eq__(self, other):
         return (
-            self._path == other._path and
-            self._data == other._data and
-            self._method == other._method
+            self.internaluse_path == other.internaluse_path and
+            self.internaluse_data == other.internaluse_data
         )
+
+    def __iter__(self):
+        # allows to run dict(api_object_instance)
+        for key in self.response.iterkeys():
+            yield self.response[key]
 
     def __hash__(self):
         # this will allow to use ApiObject instances as dict keys
-        return (self._path, self._method, self._data_hash).__hash__()
+        return (self.internaluse_path, self._method, self.internaluse_data_hash).__hash__()
+
+    def get(self, subpath=None, **kwargs):
+        new_data = dict(self.internaluse_data)
+        new_data.update(kwargs)
+
+        # special handling for projects
+        if subpath and self.internaluse_path == 'project/':
+            new_data['project_slug'] = subpath
+
+        path = self.internaluse_path
+        if subpath:
+            if not subpath.endswith('/'):
+                subpath = subpath + '/'
+            path = os.path.join(path, subpath)
+
+        return ApiObject(path, self.internaluse_api, new_data)
+
+    @property
+    def response(self):
+        if self._response is None:
+            self._response = self.internaluse_api._make_request(self.internaluse_path, self.internaluse_data)
+        return self._response
+
+    def _data_hash(self):
+        keys = tuple(sorted(self.internaluse_data.keys()))
+        values = tuple([self.internaluse_data[key] for key in keys])
+        return tuple(keys, values).__hash__()
 
 
 class KavaApi(object):
 
     ALLOWED_PATHS = {
+        'project/add/': {
+            'method': 'post',
+            'accepts_company': True,
+            'auth': 'basic',
+            },
         'project/add/': {
             'method': 'post',
             'accepts_company': True,
@@ -108,13 +130,28 @@ class KavaApi(object):
         self.username = username
         self.password = password
         self.base_url = base_url
-        self.api_key = api_key
+        self.internaluse_api_key = api_key
         self.company_name = company_name
+        self.__root_api = ApiObject('', self)
 
-    def _make_request(self, resource_uri, data=None, method='get'):
+    def __getattr__(self, name):
+        if name == 'projects':  # just to be more meaningful
+            name = 'project'
+        return getattr(self.__root_api, name)
+
+    def get_api_key(self):
+        pass
+
+    def _make_request(self, resource_uri, data=None):
         url = urlparse.urljoin(self.base_url, resource_uri)
         data = data or {}
         data = dict(data)
+        method = self.ALLOWED_PATHS.get(resource_uri, {}).get('method', 'get')
+
+        if method == 'get':
+            data_key = 'params'
+        elif method == 'post':
+            data_key = 'data'
         requests_method = getattr(requests, method)
 
         accepts_company = self.ALLOWED_PATHS.get(resource_uri, {}).get('accepts_company')
@@ -124,7 +161,11 @@ class KavaApi(object):
 
         requires_api_key = self.ALLOWED_PATHS.get(resource_uri, {}).get('auth') == 'api_key'
 
-        if requires_api_key and not self._api_key:
-            self.get_api_key()
+        requests_method_kwargs = {data_key: data}
 
-        requests_method(url, data)
+        if requires_api_key and not self.internaluse_api_key:
+            self.get_api_key()
+        else:
+            requests_method_kwargs['auth'] = (self.username, self.password)
+
+        return requests_method(url, **requests_method_kwargs).json()
