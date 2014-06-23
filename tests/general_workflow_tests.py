@@ -56,13 +56,9 @@ class GeneralWorkflowTest(unittest2.TestCase):
             auth=auth,
         )
 
-        all_projects_api = api.projects.get()
-        all_projects_api.response
+        api.projects.response
         requests.get.assert_called_with(
             urlparse.urljoin(api.base_url, 'project/'),
             params={},
             auth=auth,
         )
-
-        project_api_same = all_projects_api.get(project_slug)
-        self.assertEqual(project_api, project_api_same)
