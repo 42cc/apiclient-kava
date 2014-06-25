@@ -1,9 +1,45 @@
 # -*- coding: utf-8 -*-
 import os
 import urlparse
+import logging
 
 # thirdparty:
 import requests
+
+# internals:
+from .exceptions import UnauthorizedError, ApiError
+
+logger = logging.getLogger(__name__)
+
+
+def enable_debug():
+    logger.setLevel(logging.DEBUG)
+    # create console handler and set level to debug
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    # create formatter
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # add formatter to ch
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
+
+class ApiChildren(object):
+    def __init__(self, parent, config):
+        self.parent = parent
+        self.config = config
+        self.__children_list_data = []
+
+    @property
+    def children_list_data(self):
+        if not self.__children_list_data:
+            self.__children_list_data = self.parent.response
+            for key in self.config['keys_path_to_list']:
+                self.__children_list_data = self.__children_list_data[key]
+        return self.__children_list_data
+
+    def __getitem__(self, index):
+        return self.parent.get(self.children_list_data[index][self.config['subpath_key']])
 
 
 class ApiObject(object):
@@ -12,6 +48,14 @@ class ApiObject(object):
         self.internaluse_api = api
         self.internaluse_data = data or {}
         self._response = None
+
+        children_config = api.ALLOWED_PATHS.get(path, {}).get('children_config')
+        if children_config:
+            self.children = ApiChildren(self, children_config)
+        else:
+            self.children = []
+
+        self.__chained_apis = {}
         return
 
     def __getattr__(self, name):
@@ -25,9 +69,14 @@ class ApiObject(object):
             subpath = os.path.join('project/', name)
         else:
             subpath = os.path.join(self.internaluse_path, name)
-        return ApiObject(subpath, self.internaluse_api, self.internaluse_data)
+        if subpath not in self.__chained_apis:
+            self.__chained_apis[subpath] = ApiObject(subpath, self.internaluse_api, self.internaluse_data)
+
+        return self.__chained_apis[subpath]
 
     def __getitem__(self, key):
+        if isinstance(key, (int, long)) and self.children:
+            return self.children[key]
         return self.response[key]
 
     def __unicode__(self):
@@ -44,8 +93,10 @@ class ApiObject(object):
 
     def __iter__(self):
         # allows to run dict(api_object_instance)
-        for key in self.response.iterkeys():
-            yield self.response[key]
+        return self.response.iterkeys()
+
+    def keys(self):
+        return self.response.keys()
 
     def __hash__(self):
         # this will allow to use ApiObject instances as dict keys
@@ -58,6 +109,7 @@ class ApiObject(object):
         # special handling for projects
         if subpath and self.internaluse_path == 'project/':
             new_data['project_slug'] = subpath
+            new_data['project'] = subpath
 
         path = self.internaluse_path
         if subpath:
@@ -118,6 +170,13 @@ class KavaApi(object):
             'auth': 'basic',
             },
 
+        'project/': {
+            'children_config': {
+                'keys_path_to_list': ('projects',),
+                'subpath_key': 'slug',
+            }
+        }
+
     }
 
     def __init__(
@@ -130,7 +189,7 @@ class KavaApi(object):
         self.username = username
         self.password = password
         self.base_url = base_url
-        self.internaluse_api_key = api_key
+        self.api_key = api_key
         self.company_name = company_name
         self.__root_api = ApiObject('', self)
 
@@ -140,7 +199,7 @@ class KavaApi(object):
         return getattr(self.__root_api, name)
 
     def get_api_key(self):
-        pass
+        self.api_key = self._make_request('apikey/login/')['key']
 
     def _make_request(self, resource_uri, data=None):
         url = urlparse.urljoin(self.base_url, resource_uri)
@@ -163,9 +222,24 @@ class KavaApi(object):
 
         requests_method_kwargs = {data_key: data}
 
-        if requires_api_key and not self.internaluse_api_key:
+        if requires_api_key:
             self.get_api_key()
+            requests_method_kwargs['headers'] = {'Authorization': 'ApiKey %s:%s' % (self.username, self.api_key)}
         else:
             requests_method_kwargs['auth'] = (self.username, self.password)
 
-        return requests_method(url, **requests_method_kwargs).json()
+        response = requests_method(url, **requests_method_kwargs)
+        logger.debug(unicode(response))
+
+        if response.status_code == 401:
+            raise UnauthorizedError(response.text)
+        elif response.status_code >= 400:
+            error_msg = response.text
+            try:
+                error_msg = response.json()['errors']
+                error_msg = response.json()['message']['errors']
+            except Exception:
+                pass
+            raise ApiError(error_msg)
+
+        return response.json()['message']
