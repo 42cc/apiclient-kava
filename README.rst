@@ -24,7 +24,7 @@ Usage
 
 	# almost all attributes of Api return instances of ApiObject which do not query results until they are required:
 	projects_api = api.projects  # no requests made
-	first_project_api = projects_api[0]  # project list api called but project details are not
+	first_project_api = projects_api.children[0]  # project list api called but project details are not
 	first_project_estimate_api = first_project_api.estimate  # zero apis called
 	first_project_api.estimate['avg_time_per_cp']  # estimates api called and result is returned
 
@@ -46,7 +46,7 @@ Usage
 	api.projects.properties  # ApiObject for /api/project/properties
 
 	# but some attributes of ApiObject "break chaining":
-	api.projects[0].estimate.response  # returns dict with response from API
+	api.projects.children[0].estimate.response  # returns dict with response from API
 	api.projects.get  # method to get projects by slug, (see examples above)
 	api.projects.keys()  # will return keys of response dict
 

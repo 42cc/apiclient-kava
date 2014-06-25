@@ -76,7 +76,7 @@ class ApiObject(object):
 
     def __getitem__(self, key):
         if isinstance(key, (int, long)) and self.children:
-            return self.children[key]
+            raise TypeError("Please use api_object.children[i] instead. ApiObject should be used as dict")
         return self.response[key]
 
     def __unicode__(self):
