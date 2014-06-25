@@ -29,3 +29,11 @@ Usage
 	# print cc.add_project({'name': 'new test'})
 	print cc.projects()
 	print cc.project('kavyarnya')
+
+
+Running tests
+=============
+
+.. code-block:: bash
+
+   python setup.py nosetests

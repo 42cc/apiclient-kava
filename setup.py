@@ -17,7 +17,7 @@ setup(
     packages=find_packages(),
     requires=['python (>= 2.7)', ],
     install_requires=['requests'],
-    tests_require=['mock', 'unittest2', 'nose'],
+    tests_require=['mock', 'unittest2', 'nose', 'coverage'],
     description='wrapper over kavahq.com API',
     long_description=open(join(dirname(__file__), 'README.rst')).read(),
     author='42 Coffee Cups',
