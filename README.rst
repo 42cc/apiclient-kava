@@ -2,7 +2,12 @@
 KavaHQ.com API client
 =====================
 
+Installation
+============
 
+.. code-block:: bash
+
+   pip install kavahq-api
 
 Usage
 =====
