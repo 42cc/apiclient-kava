@@ -177,14 +177,18 @@ class KavaApi(object):
             'accepts_company': True,
             'auth': 'basic',
             },
+        'kavauser/by_score/': {
+            'method': 'post',
+            'accepts_company': True,
+            'auth': 'basic',
+            },
 
         'project/': {
             'children_config': {
                 'keys_path_to_list': ('projects',),
                 'subpath_key': 'slug',
-            }
-        }
-
+                },
+            },
     }
 
     def __init__(

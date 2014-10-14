@@ -86,3 +86,10 @@ class GeneralWorkflowTest(unittest2.TestCase):
             params={},
             auth=auth,
         )
+
+        api.kavauser.get('by_score', min_score=-999, company='42 Coffee Cups'
+                         ).response
+        self.assertEqual(
+            requests.post.call_args[0][0],
+            urlparse.urljoin(api.base_url, 'kavauser/by_score/')
+        )
