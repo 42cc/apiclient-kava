@@ -18,7 +18,8 @@ def enable_debug():
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
     # create formatter
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - '
+                                  '%(message)s')
     # add formatter to ch
     ch.setFormatter(formatter)
     logger.addHandler(ch)
@@ -39,7 +40,8 @@ class ApiChildren(object):
         return self.__children_list_data
 
     def __getitem__(self, index):
-        return self.parent.get(self.children_list_data[index][self.config['subpath_key']])
+        return self.parent.get(self.children_list_data[index][
+            self.config['subpath_key']])
 
 
 class ApiObject(object):
@@ -49,7 +51,8 @@ class ApiObject(object):
         self.internaluse_data = data or {}
         self._response = None
 
-        children_config = api.ALLOWED_PATHS.get(path, {}).get('children_config')
+        children_config = api.ALLOWED_PATHS.get(path, {}
+                                                ).get('children_config')
         if children_config:
             self.children = ApiChildren(self, children_config)
         else:
@@ -70,17 +73,21 @@ class ApiObject(object):
         else:
             subpath = os.path.join(self.internaluse_path, name)
         if subpath not in self.__chained_apis:
-            self.__chained_apis[subpath] = ApiObject(subpath, self.internaluse_api, self.internaluse_data)
+            self.__chained_apis[subpath] = ApiObject(subpath,
+                                                     self.internaluse_api,
+                                                     self.internaluse_data)
 
         return self.__chained_apis[subpath]
 
     def __getitem__(self, key):
         if isinstance(key, (int, long)) and self.children:
-            raise TypeError("Please use api_object.children[i] instead. ApiObject should be used as dict")
+            raise TypeError("Please use api_object.children[i] instead. "
+                            "ApiObject should be used as dict")
         return self.response[key]
 
     def __unicode__(self):
-        return u"<ApiObject '{self.internaluse_path}'?{self.internaluse_data} >".format(self=self)
+        return u"<ApiObject '{self.internaluse_path}'"\
+            "?{self.internaluse_data} >".format(self=self)
 
     def __repr__(self):
         return str(self.__unicode__())
@@ -100,7 +107,8 @@ class ApiObject(object):
 
     def __hash__(self):
         # this will allow to use ApiObject instances as dict keys
-        return (self.internaluse_path, self._method, self.internaluse_data_hash).__hash__()
+        return (self.internaluse_path, self._method,
+                self.internaluse_data_hash).__hash__()
 
     def get(self, subpath=None, **kwargs):
         new_data = dict(self.internaluse_data)
@@ -122,7 +130,8 @@ class ApiObject(object):
     @property
     def response(self):
         if self._response is None:
-            self._response = self.internaluse_api._make_request(self.internaluse_path, self.internaluse_data)
+            self._response = self.internaluse_api._make_request(
+                self.internaluse_path, self.internaluse_data)
         return self._response
 
     def _data_hash(self):
@@ -132,7 +141,6 @@ class ApiObject(object):
 
 
 class KavaApi(object):
-
     ALLOWED_PATHS = {
         'project/add/': {
             'method': 'post',
@@ -169,14 +177,18 @@ class KavaApi(object):
             'accepts_company': True,
             'auth': 'basic',
             },
+        'kavauser/by_score/': {
+            'method': 'post',
+            'accepts_company': True,
+            'auth': 'basic',
+            },
 
         'project/': {
             'children_config': {
                 'keys_path_to_list': ('projects',),
                 'subpath_key': 'slug',
-            }
-        }
-
+                },
+            },
     }
 
     def __init__(
@@ -213,18 +225,22 @@ class KavaApi(object):
             data_key = 'data'
         requests_method = getattr(requests, method)
 
-        accepts_company = self.ALLOWED_PATHS.get(resource_uri, {}).get('accepts_company')
+        accepts_company = self.ALLOWED_PATHS.get(resource_uri, {}
+                                                 ).get('accepts_company')
 
         if accepts_company and not 'company' in data:
             data['company'] = self.company_name
 
-        requires_api_key = self.ALLOWED_PATHS.get(resource_uri, {}).get('auth') == 'api_key'
+        requires_api_key = self.ALLOWED_PATHS.get(resource_uri, {}
+                                                  ).get('auth') == 'api_key'
 
         requests_method_kwargs = {data_key: data}
 
         if requires_api_key:
             self.get_api_key()
-            requests_method_kwargs['headers'] = {'Authorization': 'ApiKey %s:%s' % (self.username, self.api_key)}
+            requests_method_kwargs['headers'] = {
+                'Authorization': 'ApiKey %s:%s' % (self.username,
+                                                   self.api_key)}
         else:
             requests_method_kwargs['auth'] = (self.username, self.password)
 
