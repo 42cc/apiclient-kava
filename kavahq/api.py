@@ -233,6 +233,10 @@ class KavaApi(object):
 
         requires_api_key = self.ALLOWED_PATHS.get(resource_uri, {}
                                                   ).get('auth') == 'api_key'
+        # special case for /kavauser/username/
+        if resource_uri.split('/')[0] == 'kavauser':
+            if resource_uri.split('/')[1] != 'by_score':
+                requires_api_key = True
 
         requests_method_kwargs = {data_key: data}
 
@@ -258,4 +262,7 @@ class KavaApi(object):
                 pass
             raise ApiError(error_msg)
 
-        return response.json()['message']
+        try:
+            return response.json()['message']
+        except KeyError:
+            return response.json()
