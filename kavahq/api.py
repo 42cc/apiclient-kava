@@ -78,6 +78,10 @@ class ApiObject(object):
                                                      self.internaluse_data)
 
         return self.__chained_apis[subpath]
+    
+    def __call__(self, **kwargs):
+        self.internaluse_data = kwargs
+        return self
 
     def __getitem__(self, key):
         if isinstance(key, (int, long)) and self.children:
@@ -142,6 +146,10 @@ class ApiObject(object):
 
 class KavaApi(object):
     ALLOWED_PATHS = {
+        'arbitrary_data': {
+            'method': 'post',
+            'auth': 'api_key',
+            },
         'project/add/': {
             'method': 'post',
             'accepts_company': True,
