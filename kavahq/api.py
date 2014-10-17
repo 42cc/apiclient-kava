@@ -256,6 +256,9 @@ class KavaApi(object):
         else:
             requests_method_kwargs['auth'] = (self.username, self.password)
 
+        if resource_uri=='arbitrary_data/':  # EVIL HACK!!!
+            import json
+            requests_method_kwargs[data_key] = json.dumps(data)
         response = requests_method(url, **requests_method_kwargs)
         logger.debug(unicode(response))
 
