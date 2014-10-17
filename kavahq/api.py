@@ -133,7 +133,10 @@ class ApiObject(object):
 
     @property
     def response(self):
-        if self._response is None:
+        entry = self.internaluse_api.ALLOWED_PATHS.get(self.internaluse_path,
+                                                       {})
+        nocache = entry.get('nocache', False)
+        if nocache or self._response is None:
             self._response = self.internaluse_api._make_request(
                 self.internaluse_path, self.internaluse_data)
         return self._response
@@ -149,6 +152,7 @@ class KavaApi(object):
         'arbitrary_data/': {
             'method': 'post',
             'auth': 'api_key',
+            'nocache': True,
             },
         'project/add/': {
             'method': 'post',
