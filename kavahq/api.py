@@ -146,7 +146,7 @@ class ApiObject(object):
 
 class KavaApi(object):
     ALLOWED_PATHS = {
-        'arbitrary_data': {
+        'arbitrary_data/': {
             'method': 'post',
             'auth': 'api_key',
             },
