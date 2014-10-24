@@ -198,6 +198,7 @@ class KavaApi(object):
             'method': 'get',
             'accepts_company': True,
             'auth': 'api_key',
+            'nocache': True,
             },
 
         'project/': {
