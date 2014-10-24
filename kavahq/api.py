@@ -194,6 +194,11 @@ class KavaApi(object):
             'accepts_company': True,
             'auth': 'basic',
             },
+        'ticket/estimate/': {
+            'method': 'get',
+            'accepts_company': True,
+            'auth': 'api_key',
+            },
 
         'project/': {
             'children_config': {
