@@ -189,6 +189,11 @@ class KavaApi(object):
             'accepts_company': True,
             'auth': 'basic',
             },
+        'project/plan/' : {
+            'method': 'get',
+            'accepts_company': False,
+            'auth': 'api_key',
+        },
         'kavauser/by_score/': {
             'method': 'post',
             'accepts_company': True,
@@ -252,8 +257,13 @@ class KavaApi(object):
         requires_api_key = self.ALLOWED_PATHS.get(resource_uri, {}
                                                   ).get('auth') == 'api_key'
         # special case for /kavauser/username/
-        if resource_uri.split('/')[0] == 'kavauser':
-            if resource_uri.split('/')[1] != 'by_score':
+        split = resource_uri.split('/')
+        if split[0] == 'kavauser':
+            if split[1] != 'by_score':
+                requires_api_key = True
+        # case for /project/xxx/plan/
+        if split[0] == 'project':
+            if len(split) > 2 and split[2] == 'plan':
                 requires_api_key = True
 
         requests_method_kwargs = {data_key: data}
@@ -266,7 +276,7 @@ class KavaApi(object):
         else:
             requests_method_kwargs['auth'] = (self.username, self.password)
 
-        if resource_uri=='arbitrary_data/':  # EVIL HACK!!!
+        if resource_uri == 'arbitrary_data/':  # EVIL HACK!!!
             import json
             requests_method_kwargs[data_key] = json.dumps(data)
         response = requests_method(url, **requests_method_kwargs)
