@@ -189,7 +189,7 @@ class KavaApi(object):
             'accepts_company': True,
             'auth': 'basic',
             },
-        'project/plan/' : {
+        'project/plan/': {
             'method': 'get',
             'accepts_company': False,
             'auth': 'api_key',
@@ -204,6 +204,11 @@ class KavaApi(object):
             'accepts_company': True,
             'auth': 'api_key',
             'nocache': True,
+            },
+        'ticket/add/': {
+            'method': 'post',
+            'accepts_company': True,
+            'auth': 'basic',
             },
 
         'project/': {
