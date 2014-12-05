@@ -136,6 +136,15 @@ class ApiObject(object):
         entry = self.internaluse_api.ALLOWED_PATHS.get(self.internaluse_path,
                                                        {})
         nocache = entry.get('nocache', False)
+        # special handling for projects/xxx/plan
+        if self.internaluse_path == 'project/plan/':
+            self.internaluse_path = 'project/%s/plan/' % (
+                self.internaluse_data['project'])
+        # special handling for projects/xxx/insurnace
+        if self.internaluse_path == 'project/insurance/':
+            self.internaluse_path = 'project/%s/insurance/' % (
+                self.internaluse_data['project'])
+
         if nocache or self._response is None:
             self._response = self.internaluse_api._make_request(
                 self.internaluse_path, self.internaluse_data)
@@ -194,6 +203,12 @@ class KavaApi(object):
             'accepts_company': False,
             'auth': 'api_key',
         },
+        'project/insurance/': {
+            'method': 'get',
+            'accepts_company': False,
+            'auth': 'api_key',
+        },
+
         'kavauser/by_score/': {
             'method': 'post',
             'accepts_company': True,
@@ -266,9 +281,9 @@ class KavaApi(object):
         if split[0] == 'kavauser':
             if split[1] != 'by_score':
                 requires_api_key = True
-        # case for /project/xxx/plan/
+        # case for /project/xxx/plan/ and /project/xxx/insurance/
         if split[0] == 'project':
-            if len(split) > 2 and split[2] == 'plan':
+            if len(split) > 2 and split[2] in ('plan', 'insurance'):
                 requires_api_key = True
 
         requests_method_kwargs = {data_key: data}
