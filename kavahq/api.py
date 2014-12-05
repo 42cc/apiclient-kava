@@ -225,6 +225,11 @@ class KavaApi(object):
             'accepts_company': True,
             'auth': 'basic',
             },
+        'ticket/comment/': {
+            'method': 'post',
+            'accepts_company': True,
+            'auth': 'basic',
+            },
 
         'project/': {
             'children_config': {
