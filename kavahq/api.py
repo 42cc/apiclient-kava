@@ -144,6 +144,10 @@ class ApiObject(object):
         if self.internaluse_path == 'project/insurance/':
             self.internaluse_path = 'project/%s/insurance/' % (
                 self.internaluse_data['project'])
+        # special handling for project/xxx/time_spent_gen
+        if self.internaluse_path == 'project/time_spent_gen/':
+            self.internaluse_path = 'project/%s/time_spent_gen/' % (
+                self.internaluse_data['project'])
 
         if nocache or self._response is None:
             self._response = self.internaluse_api._make_request(
@@ -162,11 +166,6 @@ class KavaApi(object):
             'method': 'post',
             'auth': 'api_key',
             'nocache': True,
-            },
-        'project/add/': {
-            'method': 'post',
-            'accepts_company': True,
-            'auth': 'basic',
             },
         'project/add/': {
             'method': 'post',
@@ -207,6 +206,11 @@ class KavaApi(object):
             'method': 'get',
             'accepts_company': False,
             'auth': 'api_key',
+        },
+        'project/time_spent_gen/': {
+            'method': 'post',
+            'accepts_company': True,
+            'auth': 'basic',
         },
 
         'kavauser/by_score/': {
@@ -266,6 +270,9 @@ class KavaApi(object):
         data = data or {}
         data = dict(data)
         method = self.ALLOWED_PATHS.get(resource_uri, {}).get('method', 'get')
+        # for project/xxx/time_spent_gen
+        if 'time_spent_gen' in resource_uri:
+            method = 'post'
 
         if method == 'get':
             data_key = 'params'
