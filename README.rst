@@ -41,6 +41,9 @@ Usage
 	dict(kava_project_api)
 	# {u'days_num_bugs_showing': X, ...}
 
+	kava_api.kavauser.akhavr.response
+	# {u'username': u'akhavr', u'is_active': True, ...}
+
 	dict(kava_project_api.estimate)
 	# {u'avg_time_per_cp': u'2.1'...}
 	kava_project_api.properties['owner']
