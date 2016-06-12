@@ -84,6 +84,12 @@ class ApiObject(object):
         return self
 
     def __getitem__(self, key):
+        # special case for /kavauser/username/
+        split = self.internaluse_path.split('/')
+        if split[0] == 'kavauser' and (len(split) == 1 or not split[1]):
+            self.internaluse_path = "kavauser/%s/" % key
+            return self.response
+
         if isinstance(key, (int, long)) and self.children:
             raise TypeError("Please use api_object.children[i] instead. "
                             "ApiObject should be used as dict")

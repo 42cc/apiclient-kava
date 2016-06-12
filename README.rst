@@ -41,7 +41,7 @@ Usage
 	dict(kava_project_api)
 	# {u'days_num_bugs_showing': X, ...}
 
-	api.kavauser.akhavr.response
+	dict(api.kavauser['akhavr'])
 	# {u'username': u'akhavr', u'is_active': True, ...}
 
 	dict(kava_project_api.estimate)
